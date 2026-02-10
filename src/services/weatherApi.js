@@ -64,8 +64,8 @@ export async function getCitySuggestions(query, limit = 5) {
  * Obtiene el clima actual por coordenadas (más preciso que por nombre).
  */
 export async function getWeatherByCoords(lat, lon) {
-  getApiKey();
-  const url = `${WEATHER_URL}?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`;
+  const apiKey = getApiKey();
+  const url = `${WEATHER_URL}?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${apiKey}`;
   const response = await fetch(url);
   if (!response.ok) {
     if (response.status === 404) throw new Error('Ubicación no encontrada.');
