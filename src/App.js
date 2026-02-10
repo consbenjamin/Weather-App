@@ -1,66 +1,85 @@
 import React, { useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import axios from 'axios';
+import { Routes, Route } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 import Nav from './components/Nav';
 import Cards from './components/Cards';
 import Footer from './components/Footer';
-
-const apiKey = '8f11e7f9d66a0de7a0e931642eeb8fa4';
+import { useSearchHistory } from './hooks/useSearchHistory';
+import { getWeatherByCity, getWeatherByCoords, getForecast5Days } from './services/weatherApi';
 
 function App() {
   const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { addToRecent } = useSearchHistory();
 
   function onClose(id) {
-    setCities(oldCities => oldCities.filter(c => c.id !== id));
+    setCities((old) => old.filter((c) => c.id !== id));
   }
 
-  async function onSearch(cityToSearch) {
-    try{
-      let json = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${cityToSearch}&units=metric&appid=${apiKey}`);
-      let data = json.data;
+  async function onSearch(selected) {
+    const isPlace = selected && typeof selected === 'object' && selected.name;
+    const term = isPlace ? selected.name.trim() : (typeof selected === 'string' ? selected : '').trim();
 
-        const city = {
-          min: Math.round(data.main.temp_min),
-          max: Math.round(data.main.temp_max),
-          img: data.weather[0].icon,
-          id: data.id,
-          wind: data.wind.speed,
-          temp: Math.round(data.main.temp),
-          name: data.name,
-          weather: data.weather[0].main,
-          clouds: data.clouds.all,
-          latitud: data.coord.lat,
-          longitud: data.coord.lon
-        };
+    if (!term) {
+      Swal.fire({
+        title: 'Campo vacío',
+        text: 'Escribe el nombre de una ciudad o elige una sugerencia.',
+        icon: 'info',
+        confirmButtonText: 'Entendido',
+      });
+      return;
+    }
 
-        cities.some((e) => e.name === city.name)
-        ? Swal.fire({
-            title: 'Error!',
-            text: "You've already searched for that city!",
-            icon: 'warning',
-            confirmButtonText: 'Ok',
-          })
-        : setCities((oldCities) => [...oldCities, city]);
-      } catch (error) {
+    setLoading(true);
+    try {
+      const city = isPlace && selected.lat != null && selected.lon != null
+        ? await getWeatherByCoords(selected.lat, selected.lon)
+        : await getWeatherByCity(term);
+
+      if (cities.some((c) => c.id === city.id)) {
         Swal.fire({
-          title: 'Error!',
-          text: 'The city was not found.',
-          icon: 'error',
+          title: 'Ya añadida',
+          text: 'Esa ciudad ya está en la lista.',
+          icon: 'warning',
           confirmButtonText: 'Ok',
         });
+        return;
       }
+
+      let forecast = [];
+      if (city.latitud != null && city.longitud != null) {
+        try {
+          forecast = await getForecast5Days(city.latitud, city.longitud);
+        } catch {
+          forecast = [];
+        }
+      }
+      setCities((old) => [...old, { ...city, forecast }]);
+      addToRecent({ name: city.name, country: city.country, lat: city.latitud, lon: city.longitud });
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'No se pudo obtener el clima. Intenta de nuevo.',
+        icon: 'error',
+        confirmButtonText: 'Ok',
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
-  return (<>
-    <Nav onSearch={onSearch}/>
-      <Routes>
-        <Route path='/' element={<Cards cities={cities} onClose={onClose}/>} />
-      </Routes> 
-    <Footer/>
-      
-  </>);
+  return (
+    <>
+      <Nav onSearch={onSearch} loading={loading} />
+      <main className="min-h-[calc(100vh-8rem)] pb-20">
+        <Routes>
+          <Route path="/" element={<Cards cities={cities} onClose={onClose} />} />
+        </Routes>
+      </main>
+      <Footer />
+    </>
+  );
 }
 
 export default App;

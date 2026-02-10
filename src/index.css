@@ -1,40 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-gradient-start: #f0f9ff;
+  --bg-gradient-end: #e0f2fe;
+  --bg-gradient-mid: #bae6fd;
+  --surface: rgba(255, 255, 255, 0.9);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+}
 
-::-webkit-scrollbar {
-  width: 10px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-white;
-}
-::-webkit-scrollbar-thumb {
-  background-color: gray;
-  border: 3px solid white;
-  border-radius: 10px;
+.dark {
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-end: #1e293b;
+  --bg-gradient-mid: #334155;
+  --surface: rgba(30, 41, 59, 0.9);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
 }
 
 html {
-  @apply bg-gradient-to-r from-cyan-100 to-blue-100 font-semibold font-sans;
+  @apply antialiased;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 body {
   min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 50%, var(--bg-gradient-mid) 100%);
+  background-attachment: fixed;
+  @apply text-slate-800;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  @apply font-sans text-sky-900;
+.dark body {
+  @apply text-slate-200;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold text-slate-800 dark:text-slate-100;
 }
 
 p {
-  @apply text-gray-700;
+  @apply text-slate-600 dark:text-slate-400;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 dark:bg-slate-800 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-500;
+}
+
+/* Focus visible para accesibilidad */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  @apply outline-2 outline-offset-2 outline-sky-500 dark:outline-sky-400;
 }

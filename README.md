@@ -1,43 +1,39 @@
-# Getting Started with Create React App
+# Weather App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Aplicación del tiempo que consume la API de [OpenWeather](https://openweathermap.org/api) para mostrar el clima actual por ciudad.
 
-## Available Scripts
+## Configuración
 
-In the project directory, you can run:
+1. Obtén una API key gratuita en [OpenWeather](https://openweathermap.org/api).
+2. Copia el archivo de ejemplo y añade tu clave:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edita `.env` y reemplaza `tu_api_key_aqui` por tu API key:
+   ```
+   REACT_APP_OPENWEATHER_API_KEY=tu_clave_real
+   ```
 
-### `npm start`
+## Scripts
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **`npm start`** — Ejecuta la app en desarrollo ([http://localhost:3000](http://localhost:3000)).
+- **`npm run build`** — Genera la build de producción.
+- **`npm test`** — Ejecuta los tests.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Stack
 
-### `npm test`
+- React 18
+- React Router
+- Tailwind CSS
+- SweetAlert2
+- OpenWeather API (Current Weather)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Funcionalidades
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## 📷
-![image](https://user-images.githubusercontent.com/106201629/221020384-22a232d1-c1a2-4a91-9682-b4ece8b1c06d.png)
+- Búsqueda por nombre de ciudad
+- Temperatura actual, mínima y máxima
+- Descripción del tiempo (en español)
+- Humedad, viento y presión
+- Iconos oficiales de OpenWeather (HTTPS)
+- Mensajes de error claros (ciudad no encontrada, API key inválida, etc.)
+- Diseño responsive y accesible

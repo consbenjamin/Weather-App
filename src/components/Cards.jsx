@@ -1,29 +1,82 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Card from './Card';
 import Search from '../assets/search.svg';
 
-export default function Cards({cities, onClose}) {
-  return (<>
+const container = {
+  hidden: { opacity: 0 },
+  visible: (i = 1) => ({
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  }),
+};
 
-  {cities.length > 0 ? (
-    <div className='w-full flex flex-wrap justify-center gap-4 max-w-7xl m-auto'>
-      {cities.map(c => <Card
-          key={c.id}
-          temp={c.temp}
-          max={c.max}
-          min={c.min}
-          name={c.name}
-          img={c.img}
-          onClose={() => onClose(c.id)}
-        /> )}
-    </div>
-  ) : (
-    <div className="w-full h-full grid place-items-center mt-48">
-          <div className="max-w-sm mx-4">
-            <img src={Search} alt="Search for a City!" />
-          </div>
-          <h1 className="m-0 mt-8 text-2xl">Search for a City!</h1>
-        </div>
+const emptyVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+};
+
+export default function Cards({ cities, onClose }) {
+  return (
+    <>
+      {cities.length > 0 ? (
+        <motion.div
+          key="cards-grid"
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          className="w-full px-4 py-8 flex flex-wrap justify-center gap-6 max-w-6xl mx-auto"
+        >
+          <AnimatePresence mode="popLayout">
+            {cities.map((c, index) => (
+              <Card
+                key={c.id}
+                id={c.id}
+                index={index}
+                temp={c.temp}
+                max={c.max}
+                min={c.min}
+                name={c.name}
+                country={c.country}
+                img={c.icon}
+                description={c.description}
+                humidity={c.humidity}
+                wind={c.wind}
+                pressure={c.pressure}
+                forecast={c.forecast}
+                onClose={onClose}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="empty-state"
+          variants={emptyVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full min-h-[60vh] flex flex-col items-center justify-center px-4 py-12"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.9 }}
+            transition={{ delay: 0.15, duration: 0.35 }}
+            className="max-w-[280px] mb-6"
+          >
+            <img src={Search} alt="" className="w-full h-auto" />
+          </motion.div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-700 dark:text-slate-300 text-center mb-2">
+            Busca una ciudad
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 text-center max-w-sm">
+            Escribe en la barra de búsqueda, usa las sugerencias o elige una búsqueda reciente.
+          </p>
+        </motion.div>
       )}
-  </>);
+    </>
+  );
 }
