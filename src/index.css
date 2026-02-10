@@ -25,13 +25,15 @@
 html {
   @apply antialiased;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 50%, var(--bg-gradient-mid) 100%);
   background-attachment: fixed;
-  @apply text-slate-800;
+  @apply text-slate-800 overflow-x-hidden;
 }
 
 .dark body {
@@ -69,4 +71,11 @@ button:focus-visible,
 input:focus-visible,
 a:focus-visible {
   @apply outline-2 outline-offset-2 outline-sky-500 dark:outline-sky-400;
+}
+
+/* Safe area para dispositivos con notch / barra de inicio */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  footer {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
 }

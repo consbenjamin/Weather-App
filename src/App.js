@@ -72,7 +72,7 @@ function App() {
   return (
     <>
       <Nav onSearch={onSearch} loading={loading} />
-      <main className="min-h-[calc(100vh-8rem)] pb-20">
+      <main className="min-h-[calc(100vh-10rem)] sm:min-h-[calc(100vh-8rem)] pb-20 sm:pb-20 pt-1">
         <Routes>
           <Route path="/" element={<Cards cities={cities} onClose={onClose} />} />
         </Routes>

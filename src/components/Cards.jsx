@@ -29,7 +29,7 @@ export default function Cards({ cities, onClose }) {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="w-full px-4 py-8 flex flex-wrap justify-center gap-6 max-w-6xl mx-auto"
+          className="w-full px-3 py-5 sm:px-4 sm:py-6 md:py-8 flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6 max-w-6xl mx-auto"
         >
           <AnimatePresence mode="popLayout">
             {cities.map((c, index) => (
@@ -59,20 +59,20 @@ export default function Cards({ cities, onClose }) {
           variants={emptyVariants}
           initial="hidden"
           animate="visible"
-          className="w-full min-h-[60vh] flex flex-col items-center justify-center px-4 py-12"
+          className="w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col items-center justify-center px-3 sm:px-4 py-8 sm:py-12"
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 0.9 }}
             transition={{ delay: 0.15, duration: 0.35 }}
-            className="max-w-[280px] mb-6"
+            className="max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mb-4 sm:mb-6"
           >
             <img src={Search} alt="" className="w-full h-auto" />
           </motion.div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-700 dark:text-slate-300 text-center mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-700 dark:text-slate-300 text-center mb-2 px-2">
             Busca una ciudad
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-center max-w-sm">
+          <p className="text-slate-600 dark:text-slate-400 text-center max-w-sm text-sm sm:text-base px-2">
             Escribe en la barra de búsqueda, usa las sugerencias o elige una búsqueda reciente.
           </p>
         </motion.div>

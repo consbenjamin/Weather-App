@@ -10,11 +10,18 @@ const GEO_URL = 'https://api.openweathermap.org/geo/1.0/direct';
 
 const DAY_NAMES_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+export const API_KEY_STORAGE = 'weather-app-api-key';
+
+function getStoredApiKey() {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
 function getApiKey() {
-  const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
+  const apiKey = getStoredApiKey() || process.env.REACT_APP_OPENWEATHER_API_KEY || '';
   if (!apiKey) {
     throw new Error(
-      'API key no configurada. Copia .env.example a .env y añade REACT_APP_OPENWEATHER_API_KEY'
+      'API key no configurada. Ve a Configuración (icono de engranaje) y añade tu clave de OpenWeather, o configura REACT_APP_OPENWEATHER_API_KEY en .env'
     );
   }
   return apiKey;

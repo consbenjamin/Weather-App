@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import { HiOutlineSearch, HiOutlineClock, HiOutlineTrash } from 'react-icons/hi';
 import { getCitySuggestions } from '../services/weatherApi';
 import { useSearchHistory } from '../hooks/useSearchHistory';
@@ -11,9 +12,11 @@ export default function SearchBar({ onSearch, loading = false }) {
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState(null);
   const { recent, history, clearHistory } = useSearchHistory();
   const debounceRef = useRef(null);
   const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   const runSearch = useCallback(
     (value) => {
@@ -51,64 +54,70 @@ export default function SearchBar({ onSearch, loading = false }) {
     };
   }, [query]);
 
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const showRecentOrHistory = open && !query.trim();
   const showSuggestions = open && query.trim().length > 0;
   const hasRecent = recent.length > 0;
   const hasHistory = history.length > 0;
   const showDropdown = open && (showRecentOrHistory ? (hasRecent || hasHistory) : true);
 
-  return (
-    <div ref={wrapperRef} className="relative w-full max-w-md">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (query.trim()) runSearch(query.trim());
-        }}
-        className="flex gap-2"
-      >
-        <div className="relative flex-1">
-          <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Buscar ciudad..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setOpen(true)}
-            disabled={loading}
-            className="w-full py-2.5 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:opacity-60 transition-shadow"
-            aria-label="Buscar ciudad"
-            aria-autocomplete="list"
-            id="search-input"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading || !query.trim()}
-          className="px-5 py-2.5 rounded-xl bg-sky-600 dark:bg-sky-500 text-white font-medium hover:bg-sky-700 dark:hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? '...' : 'Buscar'}
-        </button>
-      </form>
+  // Posicionar dropdown debajo del input (para el portal)
+  useEffect(() => {
+    if (!showDropdown || !wrapperRef.current) return;
+    const el = wrapperRef.current;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setDropdownRect({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+    update();
+    const obs = new ResizeObserver(update);
+    obs.observe(el);
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      obs.disconnect();
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [showDropdown]);
 
-      <AnimatePresence>
-        {showDropdown && (
-          <motion.div
-            id="search-dropdown"
-            role="listbox"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-2 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 shadow-xl z-50 max-h-[320px] overflow-y-auto"
-          >
+  useEffect(() => {
+    if (!showDropdown) setDropdownRect(null);
+  }, [showDropdown]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      const inWrapper = wrapperRef.current?.contains(e.target);
+      const inDropdown = dropdownRef.current?.contains(e.target);
+      if (!inWrapper && !inDropdown) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const dropdownContent =
+    showDropdown && dropdownRect ? (
+      <div
+        ref={dropdownRef}
+        style={{
+          position: 'fixed',
+          top: dropdownRect.top,
+          left: dropdownRect.left,
+          width: dropdownRect.width,
+          zIndex: 200,
+        }}
+      >
+        <motion.div
+          id="search-dropdown"
+          role="listbox"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 shadow-xl max-h-[min(320px,70vh)] overflow-y-auto overscroll-contain"
+        >
             {showSuggestions ? (
               <>
                 {suggestionsLoading ? (
@@ -127,10 +136,10 @@ export default function SearchBar({ onSearch, loading = false }) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}
                       onClick={() => runSearch(item)}
-                      className="w-full px-4 py-2.5 text-left flex items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/40 focus:bg-sky-50 dark:focus:bg-sky-900/40 focus:outline-none text-slate-800 dark:text-slate-200"
+                      className="w-full px-4 py-3 sm:py-2.5 text-left flex items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/40 focus:bg-sky-50 dark:focus:bg-sky-900/40 focus:outline-none text-slate-800 dark:text-slate-200 min-h-[44px] touch-manipulation"
                     >
                       <HiOutlineSearch className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-medium truncate">{item.name}</span>
                       {item.state && <span className="text-slate-500 dark:text-slate-400 text-sm">{item.state},</span>}
                       <span className="text-slate-500 dark:text-slate-400 text-sm">{item.country}</span>
                     </motion.button>
@@ -154,10 +163,10 @@ export default function SearchBar({ onSearch, loading = false }) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.03 }}
                         onClick={() => runSearch(item)}
-                        className="w-full px-4 py-2.5 text-left flex items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/40 focus:bg-sky-50 dark:focus:bg-sky-900/40 focus:outline-none text-slate-800 dark:text-slate-200 rounded-lg"
+                        className="w-full px-4 py-3 sm:py-2.5 text-left flex items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/40 focus:bg-sky-50 dark:focus:bg-sky-900/40 focus:outline-none text-slate-800 dark:text-slate-200 rounded-lg min-h-[44px] touch-manipulation"
                       >
                         <HiOutlineClock className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium truncate">{item.name}</span>
                         {item.country && (
                           <span className="text-slate-500 text-sm">({item.country})</span>
                         )}
@@ -190,7 +199,7 @@ export default function SearchBar({ onSearch, loading = false }) {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.05 + i * 0.02 }}
                           onClick={() => runSearch(item)}
-                          className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 focus:bg-slate-50 dark:focus:bg-slate-700/50 focus:outline-none text-slate-700 dark:text-slate-300 text-sm rounded-lg"
+                          className="w-full px-4 py-2.5 sm:py-2 text-left flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 focus:bg-slate-50 dark:focus:bg-slate-700/50 focus:outline-none text-slate-700 dark:text-slate-300 text-sm rounded-lg min-h-[44px] sm:min-h-0 touch-manipulation"
                         >
                           <span>{item.name}</span>
                           {item.country && (
@@ -208,9 +217,45 @@ export default function SearchBar({ onSearch, loading = false }) {
                 )}
               </>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        </motion.div>
+      </div>
+    ) : null;
+
+  return (
+    <>
+      <div ref={wrapperRef} className="relative w-full max-w-md min-w-0">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (query.trim()) runSearch(query.trim());
+          }}
+          className="flex flex-row gap-2 min-w-0"
+        >
+          <div className="relative flex-1 min-w-0">
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg sm:text-xl pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar ciudad..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setOpen(true)}
+              disabled={loading}
+              className="w-full min-w-0 py-2.5 sm:py-2.5 pl-9 sm:pl-10 pr-3 sm:pr-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:opacity-60 transition-shadow text-base"
+              aria-label="Buscar ciudad"
+              aria-autocomplete="list"
+              id="search-input"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="px-4 sm:px-5 py-2.5 rounded-xl bg-sky-600 dark:bg-sky-500 text-white font-medium hover:bg-sky-700 dark:hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[44px] flex-shrink-0"
+          >
+            {loading ? '...' : 'Buscar'}
+          </button>
+        </form>
+      </div>
+      {typeof document !== 'undefined' && createPortal(dropdownContent, document.body)}
+    </>
   );
 }
